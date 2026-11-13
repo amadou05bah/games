@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entre Nous — Le jeu des connexions invisibles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120b1c;--ink:#fbefe3;--mute:#bba8b9;--gold:#ffc46b;--rose:#ff7a8a;--violet:#a98bff;--teal:#5fd4c4;--card:rgba(255,236,220,.055);--card2:rgba(255,236,220,.09);--line:rgba(255,215,185,.15)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1100px 760px at 15% -15%,#45193f 0,transparent 60%),radial-gradient(900px 700px at 115% 115%,#4a2410 0,transparent 60%),radial-gradient(700px 500px at 90% 10%,#251a4a 0,transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.45;overflow-x:hidden}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:22px 18px 70px;min-height:100vh}
+h1,h2,h3,.serif{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+h2{font-size:30px;line-height:1.1}
+h3{font-size:20px}
+p{margin:0}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.screen{animation:enter .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes enter{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(.8)}60%{transform:scale(1.04)}100%{opacity:1;transform:none}}
+@keyframes shimmer{to{background-position:300% 0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,196,107,.45)}50%{box-shadow:0 0 0 14px rgba(255,196,107,0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+.rv{opacity:0;animation:enter .6s cubic-bezier(.2,.8,.2,1) forwards}
+.pop{opacity:0;animation:pop .6s cubic-bezier(.2,.8,.2,1) forwards}
+.stack>*+*{margin-top:14px}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.mute{color:var(--mute)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.btn{display:block;width:100%;padding:17px 20px;border-radius:18px;font-weight:600;font-size:16px;color:#2a1216;background:linear-gradient(135deg,#ffd38a,#ff9a7a 55%,#ff7a95);box-shadow:0 10px 30px -10px rgba(255,140,110,.7),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .15s,filter .2s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;filter:grayscale(.6);cursor:not-allowed}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.glow{animation:pulse 2.2s infinite}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px}
+.back{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-size:18px;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;background:var(--card2);border:1px solid var(--line);font-size:12px;font-weight:600}
+.avatar{--c:#ffb35c;width:38px;height:38px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;color:#1d0f12;background:var(--c);box-shadow:0 0 18px -2px var(--c);flex:none;font-size:15px}
+.avatar.xl{width:96px;height:96px;font-size:40px;box-shadow:0 0 50px 4px var(--c);animation:float 4s ease-in-out infinite}
+.avatar.sm{width:26px;height:26px;font-size:11px}
+/* HOME */
+.home{min-height:calc(100vh - 92px);display:flex;flex-direction:column;justify-content:center;text-align:center}
+.logo{font-size:clamp(64px,19vw,112px);line-height:.88;font-weight:800;margin:18px 0 20px;background:linear-gradient(90deg,#ffe0a8,#ff9a8a,#d3b0ff,#ffe0a8);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 9s linear infinite;filter:drop-shadow(0 6px 40px rgba(255,150,120,.35))}
+.logo em{font-style:italic;font-weight:400}
+.lede{font-family:Fraunces,Georgia,serif;font-size:19px;color:#f1dccd;max-width:380px;margin:0 auto 34px;font-style:italic}
+/* MODES */
+.mode{position:relative;overflow:hidden;text-align:left;width:100%;padding:20px;border-radius:24px;border:1px solid var(--line);background:var(--card);display:flex;gap:16px;align-items:center;transition:transform .2s,border-color .2s}
+.mode:active{transform:scale(.98)}
+.mode .ic{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;color:#24110f;flex:none;box-shadow:0 8px 30px -8px rgba(255,150,110,.7)}
+.mode h3{font-size:22px}
+.mode .tag{font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.04em;margin:2px 0 4px}
+/* SETUP */
+.field{display:flex;gap:10px;align-items:center}
+.field input,.select{flex:1;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:14px;padding:13px 14px;color:var(--ink);font:inherit;outline:none}
+.field input:focus{border-color:var(--gold)}
+.x{width:38px;height:38px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--mute);flex:none}
+.seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:4px;gap:4px}
+.seg button{flex:1;padding:11px 8px;border-radius:12px;font-weight:600;font-size:14px;color:var(--mute)}
+.seg button.on{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button[disabled]{opacity:.45;cursor:not-allowed}
+.label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:8px}
+/* GAME */
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px}
+.hbar{height:6px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;width:100%}
+.hbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd38a,#ff7a95,#a98bff);border-radius:9px;transition:width 1s}
+.scene{padding:24px 22px;border-radius:28px;background:linear-gradient(160deg,rgba(255,220,190,.11),rgba(255,220,190,.03));border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+.scene .txt{font-family:Fraunces,Georgia,serif;font-size:23px;line-height:1.3}
+.echo{font-family:Fraunces,Georgia,serif;font-style:italic;color:#ffcf9a;font-size:15px;border-left:2px solid var(--gold);padding:4px 0 4px 12px;margin-bottom:16px}
+.typ{display:inline-block;margin-bottom:12px}
+.event{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:20px;background:linear-gradient(135deg,rgba(169,139,255,.22),rgba(95,212,196,.12));border:1px solid rgba(169,139,255,.45);margin-bottom:14px}
+.event.gold{background:linear-gradient(135deg,rgba(255,196,107,.28),rgba(255,122,149,.14));border-color:rgba(255,196,107,.6)}
+.event .ei{font-size:28px;line-height:1}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;width:100%;padding:15px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-weight:500;transition:all .2s;display:flex;gap:12px;align-items:center}
+.opt .n{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--mute);flex:none}
+.opt.sel{background:linear-gradient(135deg,rgba(255,196,107,.25),rgba(255,122,149,.18));border-color:var(--gold);box-shadow:0 0 30px -8px rgba(255,180,110,.8)}
+.opt.sel .n{background:var(--gold);color:#2a1216;border-color:var(--gold)}
+.opt.static{cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:14px;transition:all .2s}
+.chip.sel{border-color:var(--gold);background:rgba(255,196,107,.18);box-shadow:0 0 20px -6px var(--gold)}
+.step{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-family:Fraunces,Georgia,serif;font-size:19px}
+.step b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:Inter;font-size:12px;background:var(--card2);border:1px solid var(--line)}
+.handoff{min-height:calc(100vh - 120px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
+.handoff .nm{font-size:44px;font-weight:800}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15)}
+.dots i.on{background:var(--gold)}
+/* secret card flip */
+.flip{perspective:1000px;cursor:pointer}
+.fi{position:relative;transition:transform .9s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;min-height:150px}
+.flip.on .fi{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:22px;padding:18px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--line)}
+.face.front{background:repeating-linear-gradient(45deg,rgba(255,196,107,.07) 0 10px,rgba(255,196,107,.02) 10px 20px),linear-gradient(160deg,#2d1830,#1c1226);align-items:center;text-align:center}
+.face.back{transform:rotateY(180deg);background:linear-gradient(160deg,rgba(255,196,107,.22),rgba(169,139,255,.18)),#1d1226;border-color:rgba(255,196,107,.5)}
+.secret-mini{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,196,107,.14),rgba(169,139,255,.12));border:1px dashed rgba(255,196,107,.45)}
+.secret-mini .si{font-size:24px}
+.warn{padding:12px 14px;border-radius:14px;background:rgba(255,122,149,.14);border:1px solid rgba(255,122,149,.45);font-weight:600}
+/* reveal */
+.canon{text-align:center;padding:26px 20px;border-radius:26px;background:radial-gradient(circle at 50% 0,rgba(255,196,107,.35),transparent 70%),var(--card);border:1px solid rgba(255,196,107,.5)}
+.canon .big{font-family:Fraunces,Georgia,serif;font-size:27px;line-height:1.2;margin-top:6px}
+.vote{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.vote.win{border-color:var(--gold)}
+.vote .l{flex:1;font-size:14px}
+.av-stack{display:flex}
+.av-stack .avatar{margin-left:-7px;border:2px solid var(--bg)}
+.web{display:block;margin:0 auto;max-width:100%}
+.web path{fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s ease forwards}
+.read{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.read:last-child{border:0}
+.ok{color:#9be37a;font-weight:700}.ko{color:#ff8f8f;font-weight:700}
+.score-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.score-row:last-child{border:0}
+.score-row .pts{font-family:Fraunces;font-size:22px;font-weight:600;min-width:46px;text-align:right}
+.delta{font-weight:700;font-size:13px;padding:2px 8px;border-radius:99px;background:rgba(155,227,122,.15);color:#b6f09a}
+.delta.neg{background:rgba(255,122,149,.15);color:#ff9fb0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.award{padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.award .ai{font-size:24px}
+.award .at{font-weight:700;font-size:14px;margin-top:6px}
+.chron{border-left:1px solid var(--line);padding-left:16px}
+.chron div{position:relative;padding:6px 0;font-family:Fraunces,Georgia,serif}
+.chron div:before{content:"";position:absolute;left:-21px;top:13px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:600;background:rgba(255,196,107,.14);border:1px solid rgba(255,196,107,.35);margin:3px 4px 0 0}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);opacity:0;transition:all .35s;background:#2b1b2e;border:1px solid var(--line);padding:12px 18px;border-radius:14px;z-index:9;font-weight:600;font-size:14px;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.rules li{margin:8px 0}
+.soon{font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(169,139,255,.3);margin-left:4px;vertical-align:middle}
+@media (min-width:900px){#app{max-width:620px;padding-top:40px}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+/* =========================================================
+   ENTRE NOUS — MVP local (pass-and-play)
+   Architecture : DONNÉES (contenus) → MOTEUR (règles pures) → VUES
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const COLORS=['#ffb35c','#ff7a8a','#b59bff','#5fd4c4','#ffd36b','#7ab8ff','#ff9ed2','#9be37a','#ff8f5c','#c7a0ff','#6be0ff','#f2c28f'];
+
+/* ---------------- DONNÉES ---------------- */
+const MODES={
+ amis:{name:'Entre amis',icon:'✦',tag:'Drôle · imprévisible · compétitif',desc:'Situations absurdes, missions secrètes, alliances et trahisons.',min:3,max:12,grad:'linear-gradient(135deg,#ffb36b,#ff6f86)',def:4},
+ famille:{name:'En famille',icon:'☀',tag:'Toutes les générations',desc:'Histoires à compléter, souvenirs à deviner, missions en équipe.',min:2,max:12,grad:'linear-gradient(135deg,#ffe08a,#ffa26b)',def:4},
+ couple:{name:'En couple',icon:'❦',tag:'Complicité · découverte',desc:'Choix simultanés, hypothèses et défis de compréhension mutuelle.',min:2,max:2,grad:'linear-gradient(135deg,#ff9ec0,#b59bff)',def:2},
+ chaos:{name:'Chaos',icon:'✺',tag:'Les règles changent en jeu',desc:'Règles modifiées en secret, masques échangés, objectifs renversés.',min:3,max:12,grad:'linear-gradient(135deg,#a98bff,#5fd4c4)',def:5}
+};
+const sc=(t,o,age=0)=>({t,o,age});
+const SCENES={
+amis:[
+ sc('Un pigeon entre par la fenêtre, un message à la patte : « Vous avez été choisis. » Le groupe…',['Répond au pigeon par écrit','Adopte le pigeon et l’appelle Gérard','Brûle le message, par prudence']),
+ sc('Vous gagnez un château hanté en Bretagne. Mais une seule personne peut y dormir cette nuit.',['On envoie {B}','Courte paille, c’est le destin','On l’échange contre une machine à raclette géante']),
+ sc('Un inconnu vous propose de supprimer UNE chose du monde. Pour toujours.',['Les réveils','Les moustiques','Les réunions qui auraient pu être un mail','Le lundi']),
+ sc('Défi créatif : {A} a 20 secondes pour inventer, à voix haute, le slogan du groupe. Verdict ?',['Génie absolu, on l’imprime sur des t-shirts','Correct, sans plus','On exige un remboursement']),
+ sc('Choix impossible : pour le reste de votre vie, vous devez…',['Parler uniquement en rimes','Être suivi·e par une musique dramatique','Éternuer à chaque mensonge']),
+ sc('Une IA propose de régler un problème du groupe. Défaut : elle prend tout au pied de la lettre.',['Lui demander de rendre {A} ponctuel·le','Lui demander de « briser la glace »','La débrancher immédiatement']),
+ sc('Coincés dans un ascenseur. Il reste UNE barre de céréales.',['La partager en miettes équitables','La donner à {B}','Organiser un débat de 40 minutes']),
+ sc('Mission surprise : le groupe fonde un groupe de rock. Son nom ?',['Les Fils Invisibles','Raclette Apocalypse','{A} et les Autres']),
+ sc('Vous trouvez un bouton rouge : « NE PAS APPUYER ». Rien d’autre.',['Appuyer. Évidemment.','Le cacher sous un coussin','Le vendre sur internet']),
+ sc('Une voyante annonce que l’un de vous deviendra célèbre. Pour quoi ?',['Une vidéo virale accidentelle','Un record du monde ridicule','Avoir sauvé un chat d’un toit']),
+ sc('Le groupe découvre que {A} a un profil secret sur une appli de rencontre… pour plantes.',['On soutient, sans juger','On s’inscrit aussi','On organise une intervention'],14),
+ sc('Une machine peut vous renvoyer 10 minutes dans le passé. Une seule fois.',['Pour revivre un dessert fini trop vite','Pour effacer une phrase gênante','Pour noter les numéros du loto']),
+ sc('Vous devez confier les clés de votre appartement à quelqu’un du groupe pendant un mois.',['{A}, sans hésiter','{B}, par instinct','Le chat du voisin, plus fiable']),
+ sc('Une alliance secrète se forme pour la soirée. Son objectif ?',['Faire rire {B} avant minuit','Décider seuls de la playlist','Ne rien faire, mais en équipe'])
+],
+famille:[
+ sc('Histoire à compléter : Mamie trouve au grenier une boîte qui chante quand on l’ouvre. Dedans, il y a…',['Une carte au trésor','Une lettre de 1952','Un minuscule dragon endormi']),
+ sc('Le chien de la famille se met soudain à parler. Ses premiers mots sont…',['« Où sont mes croquettes ? »','« Je sais qui a mangé le dernier biscuit. »','« Il faut qu’on parle de vos chaussettes. »']),
+ sc('Souvenir à deviner : {A}, quel était ton goûter préféré quand tu étais petit·e ? Tout le monde vote !',['Tartine au chocolat','Crêpes','Fruits du jardin','Gâteau de mamie']),
+ sc('Défi d’imagination : on invente une nouvelle fête familiale. Elle s’appelle…',['La Fête des Chaussettes Dépareillées','Le Jour à l’Envers (dessert en premier)','La Nuit des Lampes de Poche']),
+ sc('Mission coopérative : la maison est envahie de bulles de savon géantes ! Qui prend le commandement ?',['{A}, évidemment','{B}, sans hésiter','Le chat']),
+ sc('Souvenir commun : la sortie familiale la plus mémorable, c’était…',['Une journée à la plage','Une balade en forêt','Un parc d’attractions','Le jour où tout est allé de travers']),
+ sc('Un magicien exauce UN vœu pour toute la famille.',['Une cabane dans les arbres','Un voyage en montgolfière','Une semaine sans corvées']),
+ sc('Histoire à compléter : le robot aspirateur s’est échappé ! On le retrouve…',['Au supermarché, en train de faire les courses','Chez le voisin, à jouer aux cartes','Au parc, entouré de pigeons admiratifs']),
+ sc('Énigme du soir : il manque un ingrédient pour le dîner. La famille…',['Invente un plat jamais vu','Envoie {B} chez la voisine','Commande des pizzas']),
+ sc('Une tempête coupe l’électricité toute la soirée. Que fait-on ?',['Histoires de fantômes à la lampe','Concours de dessin à la bougie','Concert de casseroles'],8),
+ sc('Si notre famille était un film, ce serait…',['Une comédie','Un film d’aventure','Un dessin animé','Un documentaire animalier']),
+ sc('Le grand-père de {A} aurait caché quelque chose dans le jardin. Qu’est-ce que c’est ?',['Une capsule temporelle','Une recette secrète','Une boussole qui indique la maison'])
+],
+couple:[
+ sc('Une journée entière sans téléphone ni obligations. Vous commencez par…',['Un petit-déjeuner interminable au lit','Partir en voiture sans destination','Une balade au lever du soleil']),
+ sc('Vous pouvez revivre UNE journée de votre histoire commune.',['Notre première rencontre','Notre premier voyage','Un jour ordinaire, mais parfait']),
+ sc('Un chef vous prépare un dîner surprise. Le thème :',['Italie romantique','Street food de Tokyo','Cuisine de grand-mère réinventée']),
+ sc('Mission à deux : le titre du livre de votre histoire.',['« Contre toute attente »','« Le hasard fait bien les choses »','« Deux têtes, un seul oreiller »']),
+ sc('Vous gagnez un voyage. Seule condition : partir demain matin.',['Une île sans Wi-Fi','Une capitale qui ne dort jamais','Un chalet sous la neige']),
+ sc('Compréhension mutuelle : après une journée difficile, ce qui me fait le plus de bien c’est…',['Qu’on m’écoute, sans conseils','Un câlin silencieux','Qu’on me fasse rire','Un bon plat préparé pour moi']),
+ sc('Surprise : un mot glissé dans votre poche. Il dit…',['« Ce soir, c’est moi qui choisis le film. »','« Rendez-vous à 20 h, tenue élégante. »','« J’ai caché un trésor dans la maison. »']),
+ sc('Si votre couple était une saison…',['Le printemps','L’été','L’automne','L’hiver']),
+ sc('Vous adoptez un animal ensemble. Son nom :',['Biscotte','Monsieur Pantoufle','Cannelle']),
+ sc('Votre dimanche idéal ressemble à…',['Brunch et marché','Randonnée et pique-nique','Plaid, série, zéro sortie']),
+ sc('Vous pouvez apprendre ensemble une compétence en une nuit.',['Danser le tango','Cuisiner comme des chefs','Parler une nouvelle langue']),
+ sc('Situation hypothétique : vous vous rencontrez pour la première fois aujourd’hui. Où ?',['Dans une librairie, même livre en main','Bloqués sous la pluie, même abri','À un mariage, même table'])
+],
+chaos:[
+ sc('Les règles du jeu se sont enfuies. Qui part les rattraper ?',['{A}','{B}','Personne. Vive la liberté !']),
+ sc('Un portail s’ouvre. Il ne laissera passer qu’une seule idée.',['Le chaos total','L’ordre absolu','Un mélange très incertain']),
+ sc('Le gouvernement du salon est renversé. Nouveau régime :',['Monarchie de {A}','Démocratie du canapé','Anarchie des chips']),
+ sc('Un sosie de {A} vient d’arriver. Lequel est le vrai ?',['Celui de gauche','Celui de droite','Les deux. C’est pire.']),
+ sc('Le temps coule à l’envers pendant une minute. Vous en profitez pour…',['Défaire la dernière dispute','Revivre le dernier fou rire','Rajeunir le chat']),
+ sc('Une voix murmure : « L’un de vous ment depuis le début. » Le groupe accuse…',['{A}','{B}','La voix elle-même'])
+]};
+const CONV=[
+ sc('La destination secrète : vous partez tous en voyage, sans vous concerter.',['La montagne','La mer','Une grande ville','Une cabane perdue en forêt']),
+ sc('Le mot de passe commun. Il doit être identique pour tout le monde.',['Pizza','Licorne','Soleil','Patate']),
+ sc('Vous repeignez la maison commune. Une seule couleur.',['Bleu nuit','Jaune soleil','Vert forêt','Rose bonbon']),
+ sc('Le pique-nique parfait : tout le monde apporte le même thème.',['Italien','100 % fromage','Que des desserts']),
+ sc('Votre animal-totem commun :',['Un renard','Une loutre','Un hibou','Un panda roux']),
+ sc('L’heure du rendez-vous secret, sans vous être parlé :',['À l’aube','À midi pile','Au coucher du soleil','À minuit'])
+];
+const SECRETS={
+ aimant:{icon:'🧲',name:'L’Aimant',desc:'+1 pt chaque fois que quelqu’un lit correctement ton choix.'},
+ fantome:{icon:'👻',name:'Le Fantôme',desc:'+2 pts par manche où quelqu’un tente de te lire… et échoue.'},
+ architecte:{icon:'🏛️',name:'L’Architecte',desc:'+2 pts chaque fois que ton choix devient l’histoire officielle.'},
+ rebelle:{icon:'⚔️',name:'Le Rebelle',desc:'+3 pts chaque fois que tu es seul·e à faire ton choix.',min:3,no:['couple']},
+ jumeau:{icon:'♊',name:'Le Jumeau secret',desc:'+2 pts chaque manche où {P} et toi faites le même choix.',partner:1},
+ miroir:{icon:'🪞',name:'Le Miroir',desc:'+2 pts chaque fois que tu lis correctement {P}.',partner:1},
+ saboteur:{icon:'🗡️',name:'Le Saboteur',desc:'+4 pts par Convergence ratée. Discrètement…',min:3,only:['amis','chaos']},
+ gardien:{icon:'🕯️',name:'Le Gardien',desc:'+3 pts par Convergence réussie. Guide le groupe.'},
+ oracle:{icon:'🔮',name:'L’Oracle',desc:'+1 pt pour chaque lecture correcte que tu fais. (Rôle débloqué au niveau 3)',unlock:3}
+};
+const EVENTS={
+ inversion:{icon:'🪞',name:'Miroir brisé',desc:'Cette manche, ce sont les MAUVAISES lectures qui tissent des fils.'},
+ minorite:{icon:'🔥',name:'Révolution',desc:'L’option la MOINS choisie deviendra l’histoire officielle.'},
+ double:{icon:'⚡',name:'Surcharge',desc:'Tous les points de la manche sont doublés.'},
+ rumeur:{icon:'🗝️',name:'Rumeurs',desc:'Chacun va recevoir une information secrète… peut-être fausse.'},
+ echange:{icon:'🎭',name:'Échange de masques',desc:'Deux joueurs ont échangé leurs secrets. Ils le découvriront pendant leur tour.'},
+ pouvoir:{icon:'👑',name:'Le Pouvoir',desc:'Un joueur va choisir en secret la règle de la prochaine manche.'},
+ objectif:{icon:'🌀',name:'Renversement',desc:'Être lu correctement fait PERDRE 1 pt au lieu d’en rapporter.'},
+ eclipse:{icon:'🌘',name:'Éclipse — événement rare',desc:'Tous les points de la manche sont triplés.'}
+};
+const POWER_RULES=['inversion','minorite','double','objectif'];
+
+/* ---------------- ÉTAT ---------------- */
+let S={screen:'home',mode:null,setup:{players:[],rounds:7,age:0},tmp:{}};
+let G=null; // partie en cours
+let lastKey='';
+const N=i=>G.players[i].name;
+const C=i=>G.players[i].color;
+const others=i=>G.players.map((_,j)=>j).filter(j=>j!==i);
+const save=()=>{if(G&&!G.done)store.set('en_current',G)};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600)}
+const av=(i,cls='')=>`<span class="avatar ${cls}" style="--c:${C(i)}">${esc(N(i)[0].toUpperCase())}</span>`;
+
+/* ---------------- MOTEUR ---------------- */
+function newGame(mode,names,rounds,age){
+ const n=names.length;
+ const profiles=store.get('en_profiles',{});
+ const maxLvl=Math.max(1,...names.map(nm=>lvl((profiles[nm]||{}).xp||0)));
+ G={id:Date.now(),mode,rounds,age,round:1,players:names.map((name,i)=>({name,color:COLORS[i%12]})),
+  scores:Array(n).fill(0),harmony:0,harmonyGoal:Math.ceil(n*rounds*0.45),log:[],used:{},secrets:[],secretChanged:Array(n).fill(true),nextEvent:null,done:false};
+ // distribution des secrets
+ let pool=Object.keys(SECRETS).filter(k=>{const s=SECRETS[k];if(s.min&&n<s.min)return false;if(s.no&&s.no.includes(mode))return false;if(s.only&&!s.only.includes(mode))return false;if(s.unlock&&maxLvl<s.unlock)return false;return true});
+ let bag=[];G.players.forEach((_,i)=>{if(!bag.length)bag=shuffle(pool);const k=bag.pop();G.secrets.push({k,p:SECRETS[k].partner?rnd(others(i)):null})});
+ startRound();
+}
+const lvl=xp=>1+Math.floor(Math.sqrt(xp/20));
+function isConv(r){return G.mode==='couple'?r%2===0:r%3===0}
+function isEcho(r){return (r===5||r===8)&&!isConv(r)&&G.log.filter(l=>l.type!=='echo').length>=2}
+function tally(){const n=G.players.length,th=Array(n).fill(0),got=Array(n).fill(0);G.log.forEach(L=>{L.threads.forEach(t=>{th[t.from]++;th[t.to]++});L.preds.forEach(p=>{if(p&&p.ok)got[p.t]++})});return{th,got}}
+function pilier(){const{th}=tally();const m=Math.max(...th);return rnd(th.map((v,i)=>v===m?i:-1).filter(i=>i>=0))}
+function enigma(ex){const{got}=tally();const c=got.map((v,i)=>i).filter(i=>i!==ex);const m=Math.min(...c.map(i=>got[i]));return rnd(c.filter(i=>got[i]===m))}
+function allNodes(){const s={};G.log.forEach(L=>L.threads.forEach(t=>{if(t.node){const k=[t.from,t.to].sort().join('-');s[k]=1}}));return Object.keys(s).map(k=>k.split('-').map(Number))}
+function listNames(a){a=a.map(N);return a.length>1?a.slice(0,-1).join(', ')+' et '+a[a.length-1]:a[0]}
+
+function echoLine(){
+ const past=G.log.filter(l=>l.type!=='echo');if(!past.length)return null;
+ const L=past.length>1&&Math.random()<.6?rnd(past.slice(0,-1)):past[past.length-1];
+ const lbl=L.opts[L.canon];const n=G.players.length;
+ const dis=L.choices.map((c,i)=>c!==L.canon?i:-1).filter(i=>i>=0);
+ const t=[`« ${lbl} » (manche ${L.r}) a laissé des traces. Elles refont surface ce soir.`];
+ if(dis.length&&dis.length<n)t.push(`À la manche ${L.r}, ${listNames(dis.slice(0,2))} ${dis.length>1?'n’étaient':'n’était'} pas d’accord avec « ${lbl} ». Ça n’a pas été oublié.`);
+ const nodes=allNodes();if(nodes.length){const[a,b]=rnd(nodes);t.push(`Depuis leur nœud, ${N(a)} et ${N(b)} semblent se comprendre sans parler.`)}
+ if(G.log.length>=2&&n>2){const e=enigma(-1);t.push(`Personne n’arrive à lire ${N(e)}. Le mystère s’épaissit.`)}
+ if(L.rewritten)t.push(`L’histoire a été réécrite une fois déjà. Peut-on encore faire confiance au passé ?`);
+ return rnd(t);
+}
+function buildScene(){
+ const r=G.round,n=G.players.length;
+ const A=G.log.length?pilier():Math.floor(Math.random()*n);
+ const B=n>1?(G.log.length?enigma(A):rnd(others(A))):A;
+ const fill=s=>s.replace(/\{A\}/g,N(A)).replace(/\{B\}/g,N(B));
+ const callback=echoLine();
+ if(isEcho(r)){
+  const past=G.log.filter(l=>l.type!=='echo');const L=rnd(past);
+  const voters=L.choices.map((c,i)=>c===L.canon?i:-1).filter(i=>i>=0);const X=rnd(voters);
+  const soft=G.mode==='famille'||G.mode==='couple';
+  return{type:'echo',past:L.r,X,text:`Le passé frappe à la porte. À la manche ${L.r}, l’histoire a retenu : « ${L.opts[L.canon]} ». ${voters.length<n?listNames(L.choices.map((c,i)=>c!==L.canon?i:-1).filter(i=>i>=0))+' s’y opposai'+(n-voters.length>1?'ent':'t')+'. ':''}Que fait le groupe de ce souvenir ?`,
+   o:['Assumer pleinement — tout le monde gagne +1','Réécrire l’histoire',soft?`Remercier ${N(X)} pour ce choix (+2 pour ${N(X)})`:`Tout mettre sur le dos de ${N(X)} (−2 pour ${N(X)})`],keys:['assume','rewrite','blame'],callback:null};
+ }
+ const conv=isConv(r);
+ const key=conv?'conv':(G.mode==='chaos'&&Math.random()<.5?'chaos':(G.mode==='chaos'?'amis':G.mode));
+ let pool=(conv?CONV:SCENES[key]).map((s,i)=>({...s,id:key+i})).filter(s=>!(G.mode==='famille'&&G.age&&s.age>G.age));
+ let fresh=pool.filter(s=>!G.used[s.id]);if(!fresh.length){pool.forEach(s=>delete G.used[s.id]);fresh=pool}
+ const s=rnd(fresh);G.used[s.id]=1;
+ return{type:conv?'conv':'normal',text:fill(s.t),o:s.o.map(fill),callback};
+}
+function rollEvent(){
+ const r=G.round,last=r===G.rounds,m=G.mode;
+ if(Math.random()<.05)return'eclipse';
+ if(r<2)return null;
+ let p=0,list=[];
+ if(m==='chaos'){p=.75;list=['inversion','minorite','double','rumeur','echange','pouvoir','objectif']}
+ else if(m==='amis'){p=.3;list=['double','rumeur','echange']}
+ else if(m==='famille'){p=.18;list=['double']}
+ if(Math.random()>=p)return null;
+ list=list.filter(e=>e!==G.lastEvent&&!(last&&e==='pouvoir')&&!(e==='minorite'&&isConv(r)));
+ return list.length?rnd(list):null;
+}
+function startRound(){
+ const n=G.players.length;
+ G.choices=Array(n).fill(null);G.preds=Array(n).fill(null);G.turn=0;G.rumors=null;G.powerHolder=null;G.result=null;
+ G.scene=buildScene();
+ let ev;if(G.nextEvent){ev=G.nextEvent;G.nextEvent=null;G.byPower=true}else{ev=G.scene.type==='echo'?null:rollEvent();G.byPower=false}
+ G.event=ev;G.lastEvent=ev;
+ if(ev==='echange'&&n>=2){const[a,b]=shuffle(G.players.map((_,i)=>i));[G.secrets[a],G.secrets[b]]=[G.secrets[b],G.secrets[a]];[a,b].forEach(i=>{if(G.secrets[i].p===i)G.secrets[i].p=rnd(others(i));G.secretChanged[i]=true})}
+ if(ev==='pouvoir')G.powerHolder=Math.floor(Math.random()*n);
+ if(ev==='rumeur')G.rumors=G.players.map((_,i)=>({j:rnd(others(i)),o:Math.floor(Math.random()*G.scene.o.length)}));
+ G.phase='scene';save();
+}
+function resolveRound(){
+ const n=G.players.length,ch=G.choices,ev=G.event,sc=G.scene;
+ const counts=sc.o.map((_,k)=>ch.filter(c=>c===k).length);
+ let cand;
+ if(ev==='minorite'){const m=Math.min(...counts.filter(c=>c>0));cand=counts.map((c,k)=>c===m?k:-1).filter(k=>k>=0)}
+ else{const m=Math.max(...counts);cand=counts.map((c,k)=>c===m?k:-1).filter(k=>k>=0)}
+ const canon=rnd(cand),tie=cand.length>1;
+ const mult=ev==='double'?2:ev==='eclipse'?3:1;
+ const d=Array(n).fill(0),threads=[],notes=[];
+ const preds=G.preds.map(p=>p?{...p,ok:ch[p.t]===p.g}:null);
+ preds.forEach((p,i)=>{if(!p)return;const forms=ev==='inversion'?!p.ok:p.ok;if(forms){threads.push({from:i,to:p.t});d[i]+=2;d[p.t]+=ev==='objectif'?-1:1}});
+ threads.forEach(t=>{if(threads.some(u=>u.from===t.to&&u.to===t.from)){t.node=true}});
+ const nodes=[];threads.forEach(t=>{if(t.node&&t.from<t.to){nodes.push([t.from,t.to]);d[t.from]+=2;d[t.to]+=2}});
+ let success=null;
+ if(sc.type==='conv'){success=ch.every(c=>c===ch[0]);if(success)for(let i=0;i<n;i++)d[i]+=3}
+ if(sc.type==='echo'){
+  const k=sc.keys[canon],L=G.log.find(l=>l.r===sc.past);
+  if(k==='assume'){for(let i=0;i<n;i++)d[i]+=1;notes.push('Le groupe assume son passé. Tout le monde gagne +1.')}
+  if(k==='rewrite'&&L){const alt=L.opts.map((_,j)=>j).filter(j=>j!==L.canon);const cnt=alt.map(j=>L.choices.filter(c=>c===j).length);const mx=Math.max(...cnt);const nw=rnd(alt.filter((j,x)=>cnt[x]===mx));const old=L.opts[L.canon];L.canon=nw;L.rewritten=true;notes.push(`L’histoire est réécrite : à la manche ${L.r}, ce n’était plus « ${old} » mais « ${L.opts[nw]} ».`)}
+  if(k==='blame'){const soft=G.mode==='famille'||G.mode==='couple';d[sc.X]+=soft?2:-2;notes.push(soft?`${N(sc.X)} est remercié·e chaleureusement : +2.`:`${N(sc.X)} devient le bouc émissaire : −2.`)}
+ }
+ for(let i=0;i<n;i++){d[i]*=mult;G.scores[i]+=d[i]}
+ const hGain=threads.length+(success?n:0);G.harmony+=hGain;
+ G.result={canon,tie,counts,threads,nodes,d,success,notes,hGain,preds};
+ G.log.push({r:G.round,type:sc.type,text:sc.text,opts:sc.o,choices:ch.slice(),preds,canon,threads,success,event:ev});
+ G.phase='reveal';save();
+}
+function secretPoints(i){
+ const s=G.secrets[i],n=G.players.length;let pts=0;
+ G.log.forEach(L=>{
+  const onMe=L.preds.filter((p,j)=>p&&j!==i&&p.t===i);
+  switch(s.k){
+   case'aimant':pts+=onMe.filter(p=>p.ok).length;break;
+   case'fantome':if(onMe.length&&!onMe.some(p=>p.ok))pts+=2;break;
+   case'architecte':if(L.choices[i]===L.canon&&L.type!=='echo')pts+=2;break;
+   case'rebelle':if(n>=3&&L.choices.filter(c=>c===L.choices[i]).length===1)pts+=3;break;
+   case'jumeau':if(L.choices[i]===L.choices[s.p])pts+=2;break;
+   case'miroir':{const p=L.preds[i];if(p&&p.t===s.p&&p.ok)pts+=2;break}
+   case'saboteur':if(L.type==='conv'&&!L.success)pts+=4;break;
+   case'gardien':if(L.type==='conv'&&L.success)pts+=3;break;
+   case'oracle':{const p=L.preds[i];if(p&&p.ok)pts+=1;break}
+  }
+ });return pts;
+}
+function secretDesc(i){const s=G.secrets[i];return SECRETS[s.k].desc.replace('{P}',s.p!=null?N(s.p):'')}
+function finalize(){
+ if(G.final)return;
+ const n=G.players.length,coll=G.harmony>=G.harmonyGoal;
+ const sp=G.players.map((_,i)=>secretPoints(i));
+ const total=G.scores.map((s,i)=>s+sp[i]+(coll?5:0));
+ // statistiques & récompenses
+ const made=Array(n).fill(0),got=Array(n).fill(0),th=Array(n).fill(0),alone=Array(n).fill(0),pairs={};let nodes=0;
+ G.log.forEach(L=>{L.preds.forEach((p,i)=>{if(p&&p.ok){made[i]++;got[p.t]++}});L.threads.forEach(t=>{th[t.from]++;th[t.to]++;const k=[t.from,t.to].sort().join('-');pairs[k]=(pairs[k]||0)+1;if(t.node&&t.from<t.to)nodes++});if(n>=3)L.choices.forEach((c,i)=>{if(L.choices.filter(x=>x===c).length===1)alone[i]++})});
+ const arg=(a,min)=>{const m=min?Math.min(...a):Math.max(...a);return a.indexOf(m)};
+ const aw=[];
+ if(Math.max(...made)>0)aw.push({i:'🔭',t:'Télépathe',w:N(arg(made)),s:`${Math.max(...made)} lectures justes`});
+ if(n>2)aw.push({i:'🌫️',t:'L’Énigme',w:N(arg(got,1)),s:`lu·e ${Math.min(...got)} fois seulement`});
+ if(Math.max(...th)>0)aw.push({i:'🕸️',t:'Âme du groupe',w:N(arg(th)),s:`${Math.max(...th)} fils tissés`});
+ const pk=Object.keys(pairs).sort((a,b)=>pairs[b]-pairs[a])[0];if(pk&&n>2){const[a,b]=pk.split('-').map(Number);aw.push({i:'🪢',t:'Duo inséparable',w:`${N(a)} & ${N(b)}`,s:`${pairs[pk]} fils entre eux`})}
+ if(n>2&&Math.max(...alone)>0)aw.push({i:'🦄',t:'Électron libre',w:N(arg(alone)),s:`seul·e ${Math.max(...alone)} fois`});
+ if(Math.max(...got)>0&&n>2)aw.push({i:'📖',t:'Livre ouvert',w:N(arg(got)),s:`lu·e ${Math.max(...got)} fois`});
+ if(n===2){const same=G.log.filter(L=>L.choices[0]===L.choices[1]).length;aw.push({i:'💞',t:'Même longueur d’onde',w:`${same}/${G.log.length}`,s:'manches en accord parfait'})}
+ // badges + progression
+ const badges=G.players.map((_,i)=>{const b=[];if(made[i]>=4)b.push('🔭 Télépathe');if(G.log.length>=5&&got[i]===0&&n>2)b.push('🌫️ Insaisissable');if(G.log.some(L=>L.threads.some(t=>t.node&&(t.from===i||t.to===i))))b.push('🪢 Premier nœud');if(coll)b.push('✨ Toile d’or');if(G.log.some(L=>L.event==='eclipse'))b.push('🌘 Témoin de l’Éclipse');if(total[i]===Math.max(...total))b.push('👑 Couronné·e');return b});
+ const profiles=store.get('en_profiles',{});const ups=[];
+ G.players.forEach((p,i)=>{const pr=profiles[p.name]||{xp:0,games:0,badges:[]};const before=lvl(pr.xp);pr.xp+=Math.max(0,total[i])+10;pr.games++;badges[i].forEach(b=>{if(!pr.badges.includes(b))pr.badges.push(b)});profiles[p.name]=pr;if(lvl(pr.xp)>before)ups.push(`${p.name} passe niveau ${lvl(pr.xp)}${lvl(pr.xp)>=3&&before<3?' — rôle « L’Oracle » débloqué !':''}`)});
+ store.set('en_profiles',profiles);
+ G.final={sp,total,coll,aw,badges,ups,flipped:Array(n).fill(false),stage:0,nodes};
+ const h=store.get('en_history',[]);
+ h.unshift({id:G.id,date:new Date().toISOString(),mode:G.mode,rounds:G.rounds,harmony:G.harmony,goal:G.harmonyGoal,coll,players:G.players.map((p,i)=>({name:p.name,color:p.color,score:total[i],secret:SECRETS[G.secrets[i].k].name})),story:G.log.filter(l=>l.type!=='echo').map(l=>l.opts[l.canon])});
+ store.set('en_history',h.slice(0,40));
+ G.done=true;store.del('en_current');
+}
+
+/* ---------------- VUES ---------------- */
+function webSVG(threads,size=300,agg=false){
+ const n=G.players.length,c=size/2,R=size/2-30;
+ const pos=G.players.map((_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[c+R*Math.cos(a),c+R*Math.sin(a)]});
+ let lines='',k=0;
+ if(agg){const m={};threads.forEach(t=>{const key=[t.from,t.to].sort().join('-');m[key]=(m[key]||0)+1});
+  Object.entries(m).forEach(([key,v])=>{const[a,b]=key.split('-').map(Number);const[x1,y1]=pos[a],[x2,y2]=pos[b];const mx=(x1+x2)/2+(c-(x1+x2)/2)*.35,my=(y1+y2)/2+(c-(y1+y2)/2)*.35;lines+=`<path pathLength="1" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}" stroke="url(#g)" stroke-width="${1+v*1.3}" opacity="${Math.min(1,.35+v*.15)}" style="animation-delay:${(k++)*.12}s"/>`})}
+ else threads.forEach(t=>{if(t.node&&t.from>t.to)return;const[x1,y1]=pos[t.from],[x2,y2]=pos[t.to];const mx=(x1+x2)/2+(c-(x1+x2)/2)*.4,my=(y1+y2)/2+(c-(y1+y2)/2)*.4;lines+=`<path pathLength="1" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}" stroke="${t.node?'#ffc46b':C(t.from)}" stroke-width="${t.node?5:2.5}" ${t.node?'filter="url(#glow)"':''} style="animation-delay:${.6+(k++)*.35}s"/>`});
+ const dots=pos.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="17" fill="${C(i)}" style="filter:drop-shadow(0 0 8px ${C(i)})"/><text x="${x}" y="${y+5}" text-anchor="middle" font-family="Inter" font-weight="700" font-size="14" fill="#1d0f12">${esc(N(i)[0].toUpperCase())}</text>`).join('');
+ return`<svg class="web" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ffc46b"/><stop offset="1" stop-color="#ff7a95"/></linearGradient></defs><circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="rgba(255,215,185,.08)" stroke-dasharray="3 6"/>${lines}${dots}</svg>`;
+}
+const topBar=(back,title='',right='')=>`<div class="topbar">${back?`<button class="back" data-a="go" data-v="${back}" aria-label="Retour">‹</button>`:'<span></span>'}<div class="eyebrow" style="flex:1;text-align:center">${title}</div>${right||'<span style="width:40px"></span>'}</div>`;
+
+const V={
+home(){const cur=store.get('en_current',null);return`<div class="home">
+ <div class="eyebrow rv">Le jeu des connexions invisibles</div>
+ <h1 class="logo">Entre<br><em>Nous</em></h1>
+ <p class="lede rv" style="animation-delay:.3s">Chacun cache un secret. Chaque choix tisse un fil.<br>Et l’histoire se souvient de tout.</p>
+ <div class="stack rv" style="animation-delay:.5s">
+  ${cur?`<button class="btn glow" data-a="resume">Reprendre la partie · manche ${cur.round}/${cur.rounds}</button><button class="btn ghost" data-a="go" data-v="modes">Nouvelle partie</button>`:`<button class="btn glow" data-a="go" data-v="modes">Nouvelle partie</button>`}
+  <div class="row"><button class="btn ghost" data-a="go" data-v="howto">Comment jouer</button><button class="btn ghost" data-a="go" data-v="history">Historique</button></div>
+ </div>
+ <p class="mute small rv" style="margin-top:26px;animation-delay:.7s">2 à 12 joueurs · un seul téléphone · 15–25 min</p></div>`},
+howto(){return`${topBar('home','Comment jouer')}<div class="stack">
+ <h2>La Toile</h2>
+ <div class="card rules"><ol style="padding-left:20px;margin:0">
+ <li><b>Un secret.</b> Chacun reçoit un rôle caché qui lui rapporte des points d’une façon que personne ne connaît (attirer les regards, rester illisible, imposer ses choix, saboter…).</li>
+ <li><b>Une scène.</b> Le groupe découvre une situation et plusieurs options.</li>
+ <li><b>Un choix + un fil.</b> En secret, chacun choisit une option, puis <i>tire un fil</i> vers un autre joueur en devinant ce qu’il a choisi.</li>
+ <li><b>La révélation.</b> Lecture juste = un fil se tisse (+2 pour toi, +1 pour la personne lue). Deux fils réciproques = un <b>nœud</b> (+2 chacun). L’option majoritaire devient l’histoire officielle.</li>
+ <li><b>La mémoire.</b> Les choix passés reviennent : échos, retours du passé, réécriture de l’histoire. Les scènes s’adaptent à qui est lu, qui est lié, qui résiste.</li>
+ <li><b>Convergences.</b> Certaines manches sont coopératives : tout le monde gagne seulement si tout le monde choisit pareil.</li>
+ <li><b>La Toile d’or.</b> Si le groupe tisse assez de fils, tout le monde gagne +5 à la fin.</li>
+ <li><b>Les masques tombent.</b> À la fin, les secrets sont révélés et comptés. Le classement peut basculer.</li></ol></div>
+ <button class="btn" data-a="go" data-v="modes">C’est parti</button></div>`},
+modes(){return`${topBar('home','Choisis un univers')}<div class="stack">${Object.entries(MODES).map(([k,m],i)=>`<button class="mode rv" style="animation-delay:${i*.08}s" data-a="pickMode" data-v="${k}"><span class="ic" style="background:${m.grad}">${m.icon}</span><span><h3>${m.name}</h3><div class="tag">${m.tag}</div><div class="mute small">${m.desc}</div><div class="small" style="margin-top:6px;opacity:.7">${m.min===m.max?m.min:m.min+'–'+m.max} joueurs</div></span></button>`).join('')}</div>`},
+setup(){const m=MODES[S.mode],P=S.setup.players;return`${topBar('modes','Créer la partie')}<div class="stack">
+ <h2>${m.icon} ${m.name}</h2>
+ <div><div class="label">Connexion</div><div class="seg"><button class="on">📱 Un seul téléphone</button><button disabled title="Prochaine version">🌐 En ligne <span class="soon">bientôt</span></button></div></div>
+ <div><div class="label">Joueurs (${P.length}/${m.max})</div><div class="stack" style="--g:8px">${P.map((p,i)=>`<div class="field"><span class="avatar sm" style="--c:${COLORS[i%12]}">${i+1}</span><input data-in="${i}" maxlength="14" placeholder="Prénom du joueur ${i+1}" value="${esc(p)}">${P.length>m.min?`<button class="x" data-a="delP" data-v="${i}">✕</button>`:''}</div>`).join('')}
+ ${P.length<m.max?`<button class="btn ghost" data-a="addP">+ Ajouter un joueur</button>`:''}</div></div>
+ <div><div class="label">Nombre de manches</div><div class="seg">${[5,7,9].map(r=>`<button class="${S.setup.rounds===r?'on':''}" data-a="rounds" data-v="${r}">${r}${r===5?' · rapide':r===7?' · classique':' · épique'}</button>`).join('')}</div></div>
+ ${S.mode==='famille'?`<div><div class="label">Âge du plus jeune joueur</div><div class="seg">${[[6,'6–7 ans'],[8,'8–13 ans'],[0,'14 ans +']].map(([v,l])=>`<button class="${S.setup.age===v?'on':''}" data-a="age" data-v="${v}">${l}</button>`).join('')}</div></div>`:''}
+ <button class="btn" data-a="toLobby">Ouvrir la salle</button></div>`},
+lobby(){return`${topBar('setup','Salle d’attente')}<div class="stack" style="text-align:center">
+ <div class="eyebrow">${MODES[G.mode].name} · ${G.rounds} manches</div>
+ <h2>Tout le monde est là ?</h2>
+ <div class="pop" style="animation-delay:.2s">${webSVG([],280)}</div>
+ <div class="chips" style="justify-content:center">${G.players.map((p,i)=>`<span class="chip">${av(i,'sm')}${esc(p.name)}</span>`).join('')}</div>
+ <div class="card" style="text-align:left"><b>Au premier tour</b>, chaque joueur découvrira son <b>secret</b> en privé. Ne le montrez à personne.<br><span class="mute small">Objectif collectif : tisser ${G.harmonyGoal} fils pour la Toile d’or.</span></div>
+ <button class="btn glow" data-a="begin">Distribuer les secrets & commencer</button></div>`},
+history(){const h=store.get('en_history',[]),pr=store.get('en_profiles',{});return`${topBar('home','Historique')}<div class="stack">
+ <h2>Vos parties</h2>
+ ${Object.keys(pr).length?`<div class="card"><div class="label">Profils</div>${Object.entries(pr).sort((a,b)=>b[1].xp-a[1].xp).map(([n,p])=>`<div class="score-row" style="align-items:flex-start"><div style="flex:1"><b>${esc(n)}</b> <span class="mute small">· niveau ${lvl(p.xp)} · ${p.games} partie${p.games>1?'s':''}</span><div>${p.badges.map(b=>`<span class="badge">${esc(b)}</span>`).join('')}</div></div><div class="pts">${p.xp}<span class="small mute"> xp</span></div></div>`).join('')}</div>`:''}
+ ${h.length?h.map(g=>{const w=g.players.slice().sort((a,b)=>b.score-a.score);return`<div class="card"><div class="row" style="justify-content:space-between"><b>${MODES[g.mode].icon} ${MODES[g.mode].name}</b><span class="mute small" style="text-align:right">${new Date(g.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div><div class="small mute" style="margin:6px 0">${g.coll?'✨ Toile d’or':'Toile : '+g.harmony+'/'+g.goal} · gagnant·e : <b style="color:var(--ink)">${esc(w[0].name)}</b></div><div class="chips">${w.map(p=>`<span class="chip"><span class="avatar sm" style="--c:${p.color}">${esc(p.name[0])}</span>${esc(p.name)} · ${p.score}</span>`).join('')}</div>${g.story?.length?`<div class="small mute" style="margin-top:10px;font-family:Fraunces;font-style:italic">${g.story.map(esc).join(' → ')}</div>`:''}</div>`}).join(''):'<p class="mute">Aucune partie terminée pour l’instant.</p>'}
+ ${h.length?`<button class="btn ghost" data-a="clearHist">Effacer l’historique</button>`:''}</div>`},
+game(){return V[G.phase]()},
+hud(){const pct=Math.min(100,G.harmony/G.harmonyGoal*100);return`<div class="hud"><button class="back" data-a="quit" aria-label="Quitter">⌂</button><div style="flex:1"><div class="row small" style="justify-content:space-between;margin-bottom:5px"><b>Manche ${G.round}/${G.rounds}</b><span class="mute">Toile ${G.harmony}/${G.harmonyGoal}</span></div><div class="hbar"><i style="width:${pct}%"></i></div></div></div>`},
+eventBox(){if(!G.event)return'';const e=EVENTS[G.event];return`<div class="event ${G.event==='eclipse'?'gold':''} pop"><span class="ei">${e.icon}</span><div><b>${e.name}</b>${G.byPower?' <span class="small mute">— choisie en secret par quelqu’un…</span>':''}<div class="small" style="opacity:.85">${e.desc}</div></div></div>`},
+scene(){const s=G.scene;const typ=s.type==='conv'?'<span class="pill typ" style="border-color:var(--teal);color:var(--teal)">🤝 Convergence — coopération</span>':s.type==='echo'?'<span class="pill typ" style="border-color:var(--gold);color:var(--gold)">⟲ Retour du passé</span>':'<span class="pill typ">✦ Scène</span>';
+ return`${V.hud()}${V.eventBox()}<div class="scene pop">${typ}${s.callback?`<div class="echo">${esc(s.callback)}</div>`:''}<div class="txt">${esc(s.text)}</div>
+ ${s.type==='conv'?'<p class="small" style="margin-top:12px;color:var(--teal)">Vous gagnez +3 chacun seulement si TOUT le monde choisit la même option. Sans vous concerter.</p>':''}
+ <div class="opts" style="margin-top:18px">${s.o.map((o,k)=>`<div class="opt static"><span class="n">${k+1}</span>${esc(o)}</div>`).join('')}</div></div>
+ <p class="mute small" style="text-align:center;margin:16px 0">Lisez la scène ensemble. Puis chacun fera ses choix en secret.</p>
+ <button class="btn glow" data-a="startTurns">Commencer les choix secrets</button>`},
+handoff(){const i=G.turn;return`<div class="handoff"><div class="dots">${G.players.map((_,j)=>`<i class="${j<i?'on':''}"></i>`).join('')}</div>${av(i,'xl')}<p class="mute">Passe le téléphone à</p><div class="nm serif">${esc(N(i))}</div><p class="mute small">Les autres : on détourne le regard 👀</p><div style="width:100%;max-width:340px;margin-top:14px"><button class="btn glow" data-a="iam">C’est moi, je regarde</button></div></div>`},
+private(){const i=G.turn,s=G.scene,t=S.tmp,sec=G.secrets[i],SD=SECRETS[sec.k],n=G.players.length;
+ const tgt=n===2?others(i)[0]:t.target;
+ const ready=t.choice!=null&&tgt!=null&&t.guess!=null&&(G.powerHolder!==i||t.power);
+ const first=G.secretChanged[i];
+ return`<div class="row" style="margin-bottom:16px;flex:none">${av(i)}<div style="flex:1"><b>${esc(N(i))}</b><div class="small mute">Tour secret · manche ${G.round}</div></div><span class="pill">🔒 privé</span></div>
+ ${first?`<div class="flip ${t.flipped?'on':''}" data-a="flipSecret"><div class="fi"><div class="face front"><div style="font-size:34px">✦</div><b class="serif" style="font-size:20px;margin-top:6px">${G.round===1?'Ton secret':'Ton secret a changé !'}</b><span class="small mute">Touche pour retourner la carte</span></div><div class="face back"><div style="font-size:30px">${SD.icon}</div><b class="serif" style="font-size:22px">${SD.name}</b><div class="small" style="margin-top:4px">${esc(secretDesc(i))}</div></div></div></div>`
+ :`<div class="secret-mini"><span class="si">${SD.icon}</span><div><b>${SD.name}</b><div class="small">${esc(secretDesc(i))}</div></div></div>`}
+ ${G.event==='rumeur'&&G.rumors?`<div class="event" style="margin-top:14px"><span class="ei">🗝️</span><div class="small"><b>Rumeur pour toi :</b> ${esc(N(G.rumors[i].j))} va choisir « ${esc(s.o[G.rumors[i].o])} ». <span class="mute">Vrai ? Faux ? À toi de voir.</span></div></div>`:''}
+ ${G.event&&G.event!=='rumeur'?`<div class="small mute" style="margin-top:12px">${EVENTS[G.event].icon} ${EVENTS[G.event].name} : ${EVENTS[G.event].desc}</div>`:''}
+ ${G.powerHolder===i?`<div class="event gold" style="margin-top:14px"><span class="ei">👑</span><div style="flex:1"><b>Tu détiens le Pouvoir.</b><div class="small">Choisis en secret la règle de la prochaine manche :</div><div class="chips" style="margin-top:10px">${POWER_RULES.map(k=>`<button class="chip ${t.power===k?'sel':''}" style="padding:7px 12px" data-a="power" data-v="${k}">${EVENTS[k].icon} ${EVENTS[k].name}</button>`).join('')}</div></div></div>`:''}
+ <div class="step"><b>1</b>Ton choix</div>
+ <p class="small mute" style="margin:-4px 0 10px">${esc(s.text)}</p>
+ <div class="opts">${s.o.map((o,k)=>`<button class="opt ${t.choice===k?'sel':''}" data-a="choose" data-v="${k}"><span class="n">${k+1}</span>${esc(o)}</button>`).join('')}</div>
+ ${n>2?`<div class="step"><b>2</b>Tire un fil vers…</div><div class="chips">${others(i).map(j=>`<button class="chip ${t.target===j?'sel':''}" data-a="target" data-v="${j}">${av(j,'sm')}${esc(N(j))}</button>`).join('')}</div>`:''}
+ ${tgt!=null?`<div class="step"><b>${n>2?3:2}</b>Que choisit ${esc(N(tgt))} ?</div><div class="opts">${s.o.map((o,k)=>`<button class="opt ${t.guess===k?'sel':''}" data-a="guess" data-v="${k}"><span class="n">${k+1}</span>${esc(o)}</button>`).join('')}</div>`:''}
+ <div style="margin-top:24px"><button class="btn" data-a="seal" ${ready?'':'disabled'}>Sceller mon choix</button></div>`},
+reveal(){const R=G.result,s=G.scene;let dl=0;const D=()=>`style="animation-delay:${(dl+=.25).toFixed(2)}s"`;
+ return`${V.hud()}${G.event?`<div class="event ${G.event==='eclipse'?'gold':''}"><span class="ei">${EVENTS[G.event].icon}</span><div class="small"><b>${EVENTS[G.event].name}</b> — ${EVENTS[G.event].desc}</div></div>`:''}
+ ${s.type==='conv'?`<div class="canon pop" ${D()}><div class="eyebrow" style="color:${R.success?'var(--teal)':'var(--rose)'}">Convergence</div><div class="big">${R.success?'Parfaite harmonie ! +3 pour tous':'Les fils se sont emmêlés…'}</div></div>`
+ :`<div class="canon pop" ${D()}><div class="eyebrow">${G.event==='minorite'?'La révolution impose':'L’histoire retient'}</div><div class="big">« ${esc(s.o[R.canon])} »</div>${R.tie?'<div class="small mute" style="margin-top:6px">Égalité — le destin a tranché.</div>':''}</div>`}
+ ${R.notes.map(t=>`<div class="echo rv" ${D()} style="margin-top:14px">${esc(t)}</div>`).join('')}
+ <div class="stack" style="margin-top:14px">${s.o.map((o,k)=>{const who=G.choices.map((c,i)=>c===k?i:-1).filter(i=>i>=0);return`<div class="vote rv ${k===R.canon&&s.type!=='conv'?'win':''}" ${D()}><span class="l">${esc(o)}</span><span class="av-stack">${who.map(i=>av(i,'sm')).join('')}</span></div>`}).join('')}</div>
+ <div class="card rv" ${D()} style="margin-top:14px;text-align:center"><div class="label">Les fils de la manche</div>${webSVG(R.threads,260)}
+ <div style="text-align:left;margin-top:8px">${R.preds.map((p,i)=>p?`<div class="read">${av(i,'sm')}<span>${esc(N(i))} a lu ${esc(N(p.t))}</span><span style="flex:1"></span>${p.ok?'<span class="ok">✓ juste</span>':'<span class="ko">✗</span>'}${R.threads.some(t=>t.from===i)?' <span title="fil tissé">🧵</span>':''}${R.threads.some(t=>t.from===i&&t.node)?'<span title="nœud">🪢</span>':''}</div>`:'').join('')}</div>
+ ${R.nodes.length?`<p class="small" style="margin-top:10px;color:var(--gold)">🪢 Nœud : ${R.nodes.map(([a,b])=>esc(N(a))+' & '+esc(N(b))).join(', ')} se sont lus mutuellement !</p>`:''}</div>
+ <div class="card rv" ${D()} style="margin-top:14px"><div class="label">Points</div>${G.players.map((_,i)=>i).sort((a,b)=>G.scores[b]-G.scores[a]).map(i=>`<div class="score-row">${av(i,'sm')}<span style="flex:1">${esc(N(i))}</span>${R.d[i]?`<span class="delta ${R.d[i]<0?'neg':''}">${R.d[i]>0?'+':''}${R.d[i]}</span>`:''}<span class="pts">${G.scores[i]}</span></div>`).join('')}<p class="small mute" style="margin-top:8px">+${R.hGain} fil${R.hGain>1?'s':''} pour la Toile commune. Les points secrets restent cachés…</p></div>
+ <div class="rv" ${D()} style="margin-top:18px"><button class="btn" data-a="next">${G.round>=G.rounds?'Les masques tombent →':'Manche suivante →'}</button></div>`},
+final(){const F=G.final,n=G.players.length,all=F.flipped.every(x=>x);
+ if(F.stage===0)return`<div style="text-align:center" class="stack"><div class="eyebrow">Fin de l’histoire</div><h2>Les masques tombent</h2><p class="mute">Touchez chaque carte pour révéler les secrets.</p></div>
+ <div class="grid2" style="margin-top:18px">${G.players.map((_,i)=>{const sd=SECRETS[G.secrets[i].k];return`<div class="flip ${F.flipped[i]?'on':''}" data-a="flipF" data-v="${i}"><div class="fi" style="min-height:190px"><div class="face front">${av(i)}<b style="margin-top:10px">${esc(N(i))}</b><span class="small mute">?</span></div><div class="face back" style="align-items:center;text-align:center"><div style="font-size:26px">${sd.icon}</div><b class="serif">${sd.name}</b><div class="small" style="opacity:.85;margin:4px 0">${esc(N(i))}</div><span class="delta">+${F.sp[i]} pts secrets</span></div></div></div>`}).join('')}</div>
+ <div class="stack" style="margin-top:20px">${all?'<button class="btn glow" data-a="stage">Voir le classement final</button>':'<button class="btn ghost" data-a="flipAll">Tout révéler</button>'}</div>`;
+ const order=G.players.map((_,i)=>i).sort((a,b)=>F.total[b]-F.total[a]);let dl=0;const D=()=>`style="animation-delay:${(dl+=.18).toFixed(2)}s"`;
+ return`<div style="text-align:center" class="stack"><div class="eyebrow">Victoire de</div>${av(order[0],'xl')}<h2 class="serif" style="font-size:40px">${esc(N(order[0]))}</h2></div>
+ <div class="card ${F.coll?'':''} rv" ${D()} style="margin-top:18px;${F.coll?'border-color:var(--gold)':''}"><div class="row"><span style="font-size:30px;flex:none">${F.coll?'✨':'🕸️'}</span><div><b>${F.coll?'Toile d’or ! +5 pour tout le monde':'Toile inachevée'}</b><div class="small mute">${G.harmony} fils tissés sur ${G.harmonyGoal} nécessaires · ${F.nodes} nœud${F.nodes>1?'s':''}</div></div></div></div>
+ <div class="card rv" ${D()} style="margin-top:14px"><div class="label">Classement</div>${order.map((i,r)=>`<div class="score-row"><span class="mute" style="width:18px">${r+1}</span>${av(i,'sm')}<div style="flex:1"><b>${esc(N(i))}</b><div class="small mute">${G.scores[i]} jeu + ${F.sp[i]} secret${F.coll?' + 5 toile':''}</div><div>${F.badges[i].map(b=>`<span class="badge">${b}</span>`).join('')}</div></div><span class="pts">${F.total[i]}</span></div>`).join('')}</div>
+ ${F.ups.length?`<div class="card rv" ${D()} style="margin-top:14px">${F.ups.map(u=>`<div>⬆️ ${esc(u)}</div>`).join('')}</div>`:''}
+ <div class="label rv" ${D()} style="margin-top:22px">Récompenses</div><div class="grid2">${F.aw.map(a=>`<div class="award rv" ${D()}><div class="ai">${a.i}</div><div class="at">${a.t}</div><div>${esc(a.w)}</div><div class="small mute">${a.s}</div></div>`).join('')}</div>
+ <div class="card rv" ${D()} style="margin-top:14px;text-align:center"><div class="label">La Toile complète</div>${webSVG(G.log.flatMap(l=>l.threads),280,true)}</div>
+ <div class="card rv" ${D()} style="margin-top:14px"><div class="label">La chronique de votre histoire</div><div class="chron">${G.log.filter(l=>l.type!=='echo').map(l=>`<div>${l.type==='conv'?(l.success?'Tous ensemble : ':'Désaccord sur : '):''}« ${esc(l.opts[l.canon])} »${l.rewritten?' <span class="small mute">(réécrit)</span>':''}</div>`).join('')}</div></div>
+ <div class="stack rv" ${D()} style="margin-top:20px"><button class="btn glow" data-a="again">Attends, on en refait une !</button><button class="btn ghost" data-a="go" data-v="home">Accueil</button></div>`}
+};
+
+function render(){
+ const key=S.screen==='game'?`g${G.phase}${G.turn}${G.round}${G.final?G.final.stage:''}`:S.screen;
+ const still=key===lastKey;lastKey=key;
+ const html=S.screen==='game'?V.game():V[S.screen]();
+ const app=$('#app');app.innerHTML=`<div class="${still?'':'screen'}">${html}</div>`;
+ if(still)app.querySelectorAll('.rv,.pop').forEach(e=>{e.style.animation='none';e.style.opacity=1});
+ else window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ---------------- ACTIONS ---------------- */
+const A={
+ go(v){S.screen=v;render()},
+ resume(){G=store.get('en_current',null);if(!G)return;S.screen='game';render()},
+ pickMode(v){S.mode=v;const m=MODES[v];const last=store.get('en_lastnames',[]);let P=last.slice(0,m.max);while(P.length<m.def)P.push('');S.setup.players=P.slice(0,Math.max(m.min,Math.min(m.max,P.length)));S.setup.age=0;S.screen='setup';render()},
+ addP(){S.setup.players.push('');render();const ins=document.querySelectorAll('[data-in]');ins[ins.length-1]?.focus()},
+ delP(v){S.setup.players.splice(+v,1);render()},
+ rounds(v){S.setup.rounds=+v;render()},
+ age(v){S.setup.age=+v;render()},
+ toLobby(){const m=MODES[S.mode];let P=S.setup.players.map((p,i)=>p.trim()||`Joueur ${i+1}`);
+  const low=P.map(p=>p.toLowerCase());if(new Set(low).size!==P.length)return toast('Deux joueurs ont le même prénom');
+  if(P.length<m.min)return toast(`Il faut au moins ${m.min} joueurs`);
+  store.set('en_lastnames',P);newGame(S.mode,P,S.setup.rounds,S.setup.age);G.phase='scene';S.screen='lobby';render()},
+ begin(){S.screen='game';render()},
+ quit(){S.screen='home';save();render();toast('Partie sauvegardée — reprenez-la quand vous voulez')},
+ startTurns(){G.phase='handoff';G.turn=0;save();render()},
+ iam(){S.tmp={};G.phase='private';render()},
+ flipSecret(){S.tmp.flipped=!S.tmp.flipped;render()},
+ choose(v){S.tmp.choice=+v;render()},
+ target(v){S.tmp.target=+v;S.tmp.guess=null;render()},
+ guess(v){S.tmp.guess=+v;render()},
+ power(v){S.tmp.power=v;render()},
+ seal(){const i=G.turn,n=G.players.length,t=S.tmp;const tgt=n===2?others(i)[0]:t.target;
+  G.choices[i]=t.choice;G.preds[i]={t:tgt,g:t.guess};if(G.powerHolder===i)G.nextEvent=t.power;G.secretChanged[i]=false;S.tmp={};
+  G.turn++;if(G.turn<n){G.phase='handoff'}else resolveRound();save();render()},
+ next(){if(G.round>=G.rounds){finalize();G.phase='final';render();return}G.round++;startRound();render()},
+ flipF(v){G.final.flipped[+v]=true;render()},
+ flipAll(){G.final.flipped=G.final.flipped.map(()=>true);render()},
+ stage(){G.final.stage=1;render()},
+ again(){const names=G.players.map(p=>p.name);newGame(G.mode,names,G.rounds,G.age);S.screen='lobby';render()},
+ clearHist(){store.del('en_history');store.del('en_profiles');render()}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const f=A[el.dataset.a];if(f)f(el.dataset.v)});
+document.addEventListener('input',e=>{const d=e.target.dataset.in;if(d!=null)S.setup.players[+d]=e.target.value});
+
+/* ---------------- FOND ANIMÉ : la toile ---------------- */
+(function(){const cv=$('#bg'),x=cv.getContext('2d');let W,H,pts=[];const dpr=Math.min(2,window.devicePixelRatio||1);
+ function rs(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';x.setTransform(dpr,0,0,dpr,0,0);const cnt=Math.round(Math.min(70,W*H/16000));pts=Array.from({length:cnt},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.8+.6,h:Math.random()}))}
+ rs();addEventListener('resize',rs);
+ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function f(){x.clearRect(0,0,W,H);const a=S.screen==='home'?1:.45;
+  for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const p=pts[i],q=pts[j],d=Math.hypot(p.x-q.x,p.y-q.y);if(d<130){x.strokeStyle=`rgba(255,${170+Math.round(p.h*60)},${140+Math.round(q.h*80)},${(1-d/130)*.22*a})`;x.lineWidth=1;x.beginPath();x.moveTo(p.x,p.y);x.lineTo(q.x,q.y);x.stroke()}}
+  for(const p of pts){x.fillStyle=`rgba(255,${200+Math.round(p.h*40)},${150+Math.round(p.h*80)},${.75*a})`;x.shadowColor='#ffb36b';x.shadowBlur=10;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.shadowBlur=0}
+  if(!reduce)requestAnimationFrame(f)}
+ f()})();
+
+render();
+</script>
+</body>
+</html>

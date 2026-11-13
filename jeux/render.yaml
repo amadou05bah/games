@@ -1,0 +1,12 @@
+# Déploiement Render en un clic (New → Blueprint) — offre gratuite.
+services:
+  - type: web
+    name: on-joue
+    runtime: node
+    plan: free
+    buildCommand: cd client && npm install && npm run build && cd ../server && npm install
+    startCommand: cd server && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
